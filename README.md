@@ -4,17 +4,13 @@
 
 ## 看板预览（Power BI Desktop 制作）
 
-> 截图待补充：将 4 页看板截图放入 `screenshots/` 目录后，取消下面注释即可在 GitHub 首页直接展示。
-
-<!--
-| 销售总览 | 用户分层 |
+| 1. 销售总览 | 2. 用户分层（RFM） |
 |---|---|
 | ![销售总览](screenshots/page1_overview.png) | ![用户分层](screenshots/page2_rfm.png) |
 
-| 品类分析 | 评价分布 |
+| 3. 品类分析 | 4. 评价分布 |
 |---|---|
 | ![品类分析](screenshots/page3_category.png) | ![评价分布](screenshots/page4_review.png) |
--->
 
 ## 一、项目简介
 
