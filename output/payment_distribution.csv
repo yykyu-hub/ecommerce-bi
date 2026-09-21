@@ -1,0 +1,5 @@
+﻿payment_type,payment_count,payment_value,count_ratio
+credit_card,74586,12101094.88,0.7403
+boleto,19191,2769932.58,0.1905
+voucher,5493,343013.19,0.0545
+debit_card,1486,208421.12,0.0147

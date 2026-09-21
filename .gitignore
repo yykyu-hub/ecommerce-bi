@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+
+# 虚拟环境（每个人自己装，不传）
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 原始数据（Kaggle 下载，README 里附链接，不传）
+data/
+
+# 临时文件 / 操作截图（和项目无关）
+user_image*.png
+explore.py
+explore_rfm.py
+verify_outputs.py
+
+# 操作系统
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Power BI
+*.pbix
+
+# 日志
+*.log

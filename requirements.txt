@@ -1,0 +1,4 @@
+# 本项目仅依赖 pandas 和 numpy（Python 3.10+ 推荐；代码兼容 pandas 2.x/3.x）
+# 已验证运行环境：Python 3.12.2 + pandas 3.0.6 + numpy 2.5.3（Windows）
+pandas>=2.0,<4.0
+numpy>=1.24,<3.0
