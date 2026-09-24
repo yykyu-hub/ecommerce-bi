@@ -17,7 +17,7 @@
   9. order_funnel.csv           订单状态粗略漏斗（创建→支付→交付）
 
 ---------------------------------------------------------------------------------
-【口径与规则总说明（面试可直接讲）】
+【口径与规则总说明】
 
 1. 统一分析口径：已交付订单（order_status == 'delivered'）
    - 原需求中 GMV 取“已支付订单”、订单数取“已交付订单”，分子分母口径不一致
@@ -31,7 +31,7 @@
    - 为什么用 >=2 次：复购的业务含义是“同一客户第二次回来购买”，1 次是首购基线，
      从第 2 次起才算复购；这是电商行业最通用、最容易向业务方解释的口径。
    - 注意：Olist 的 customer_id 是“按订单生成”的，同一人每下一单 customer_id 都不同，
-     必须用 customer_unique_id 才能识别同一个人（面试高频考点）。
+     必须用 customer_unique_id 才能识别同一个人（customer_id 按订单生成，同一客户每次下单均不同）。
 
 3. RFM 分箱规则（基准日 = 数据中最后一个下单时间 2018-10-17）
    - R(Recency)  ：最近一次购买距基准日的天数。R 越小分越高（最近购买=4分，
@@ -44,7 +44,7 @@
    - 为什么 R/M 用分位数而不是等宽：R/M 是连续且右偏严重的变量（少数人金额极高），
      等宽分箱会把绝大多数客户压在同一档；分位数保证每档人数约 25%，分层区分度最好。
      F 是离散且极端倾斜的计数变量，分位数退化，故改用可解释的业务阈值。
-     （“先检查变量分布，再决定分箱方法”本身就是面试加分项。）
+     分箱方法应根据变量分布特征选择，而非统一套用一种方式。
    - rfm_total_score = R_score + F_score + M_score（3~12 分）
    - 分层（按优先级从上到下判定，互斥）：
        高价值用户  ：总分 >= 10
@@ -65,12 +65,12 @@
    - payments：聚合到订单级（支付总额、支付方式数）；与 delivered 订单左连接（1 单无支付记 0）。
    - reviews ：547 个订单有多条评价，按订单取平均评分；订单均分 <=2 标记为差评。
 
-5. 两种 GMV 口径（务必区分，面试容易被追问）
+5. 两种 GMV 口径（务必区分）
    - 全局/趋势/RFM 的 gmv = 订单 payment_value 合计（客户实付，含运费）。
    - 品类表 total_gmv = 该品类商品 price 合计（不含运费）：运费是订单级费用，一单多品类时
      无法合理分摊，故品类分析只统计商品金额；两张口径的差额≈全平台运费，属正常现象。
 
-6. 数据局限（简历/面试如实说明）
+6. 数据局限
    - Olist 是平台聚合脱敏数据，无浏览/点击/加购数据，无法做完整营销漏斗，
      只能计算粗略“成交率 = delivered 订单 / 全部创建订单”。
    - 2016 年仅有零星订单、2018-10 月数据不完整（月趋势末端断崖是数据截断，非业务下跌）。
@@ -266,7 +266,7 @@ def aggregate_payments(payments, valid_order_ids):
       - payment_value：订单总支付额（同一订单分期/券抵扣会有多行，需求和）；
       - payment_type_count：该订单使用的支付方式种数。
     只保留 delivered 订单（无支付记录的订单后续左连接补 0）。
-    同时打印支付方式分布，作为面试素材。
+    同时打印支付方式分布，作为看板数据依据。
     """
     pay = payments[payments["order_id"].isin(valid_order_ids)].copy()
     pay_order = (
@@ -491,7 +491,7 @@ def build_rfm(order_wide, snapshot_date):
     for seg_name in ["高价值用户", "潜力用户", "流失风险用户", "一般用户"]:
         print(f"    {seg_name:6s}: {seg_stat.get(seg_name, 0):,} 人 "
               f"({seg_ratio.get(seg_name, 0):.2f}%)")
-    # 面试素材：高价值用户的人均消费与 GMV 占比（如实呈现，不套用二八法则）
+    # 高价值用户的人均消费与 GMV 占比（如实呈现，不套用二八法则）
     hv = rfm[rfm["segment"] == "高价值用户"]
     hv_gmv_ratio = hv["M"].sum() / rfm["M"].sum() * 100
     hv_avg_m = hv["M"].mean()
@@ -500,7 +500,7 @@ def build_rfm(order_wide, snapshot_date):
           f"贡献 GMV 占比 {hv_gmv_ratio:.2f}%；")
     print(f"       人均累计消费 {hv_avg_m:,.2f}，是全体人均 {all_avg_m:,.2f} 的 "
           f"{hv_avg_m / all_avg_m:.1f} 倍。该平台复购率低，二八效应不典型，"
-          f"说明用户关系运营仍有较大空间（面试如实讲，比硬套二八法则更稳）。")
+          f"说明用户关系运营仍有较大空间，二八效应在该平台并不典型。")
 
     return rfm[["customer_unique_id", "R", "F", "M", "R_score", "F_score",
                 "M_score", "rfm_total_score", "segment"]]
@@ -537,7 +537,7 @@ def build_category_sales(item_wide):
     df["bad_review_rate"] = df["bad_review_rate"].round(4)
     df = df.sort_values("total_gmv", ascending=False).reset_index(drop=True)
 
-    # 面试素材：GMV TOP10 品类中差评率偏高的（高销售+低口碑，运营改进机会）
+    # GMV TOP10 品类中差评率偏高的（高销售+低口碑，运营改进机会）
     print("\n" + "=" * 90)
     print("【品类分析】GMV TOP10 品类及其差评率（关注“卖得多但差评率高”的品类）")
     top10 = df.head(10)
@@ -673,7 +673,7 @@ def print_funnel(dfs, orders_clean):
     print(f"    成功交付     : {total_delivered:,}  成交率(delivered/创建) "
           f"{total_delivered / total_created:.4%}")
     print("    说明：数据集无浏览/加购/点击数据，无法还原“曝光-点击-加购-下单”完整漏斗，")
-    print("          简历中应如实标注该局限，看板中不呈现虚构漏斗。")
+    print("          看板中不呈现虚构漏斗，该局限需在分析报告中注明。")
 
 
 # ======================================================================
